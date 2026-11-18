@@ -7,4 +7,8 @@ MNIST downsampled
 
 # Traning 
 SGD 
+2000 epochs
+
+# Simulation framework
+SPICE
 
