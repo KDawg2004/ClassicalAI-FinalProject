@@ -7,7 +7,7 @@ from toyDataSet import X, y
 class ToyNet(nn.Module):
     def __init__(self):
         super().__init__()
-        self.fc = nn.Linear(64, 4, bias=False)
+        self.fc = nn.Linear(64, 6, bias=False)
 
     def forward(self, x):
         return self.fc(x)
