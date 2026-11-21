@@ -40,6 +40,6 @@ def generate_crossbar(matrix, voltages, base_resistance=10_000, output="crossbar
 if __name__ == "__main__":
     generate_crossbar(
         matrix=[[1, 2], [3, 4]],
-        voltages=[1, 2],
+        voltages=[5, 6],
         base_resistance=10_000,
     )
