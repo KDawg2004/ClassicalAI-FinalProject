@@ -1,0 +1,2 @@
+Matrix multiplication 
+AxB -> A row x B column
