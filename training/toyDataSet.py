@@ -2,7 +2,7 @@ import numpy as np
 from torchvision import datasets, transforms
 from PIL import Image
 
-DIGITS = [0, 1, 2, 3]
+DIGITS = [0, 1, 2, 3, 4, 5]
 IMG_SIZE = 8  # downsampled from 28x28
 
 def _load_and_downsample(train=True, max_per_class=None):
@@ -21,7 +21,7 @@ def _load_and_downsample(train=True, max_per_class=None):
         img_small = img.resize((IMG_SIZE, IMG_SIZE), Image.LANCZOS)
         arr = np.asarray(img_small, dtype=np.float64) / 255.0  # normalize rgb to [0,1]
         images.append(arr.flatten())
-        labels.append(DIGITS.index(label))  # remap to 0..3 for CrossEntropyLoss
+        labels.append(DIGITS.index(label))  # remap to 0..5 for CrossEntropyLoss
         class_counts[label] += 1
 
     X = np.stack(images).astype(np.float64)
