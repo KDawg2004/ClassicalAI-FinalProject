@@ -1,2 +1,4 @@
-Matrix multiplication 
-AxB -> A row x B column
+positive only works and multiplies out correctly.
+
+TODO: 
+make the all integers python script work with differential pairs to represent the negative numbers.
