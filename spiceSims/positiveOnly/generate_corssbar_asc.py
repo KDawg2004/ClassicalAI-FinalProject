@@ -109,8 +109,8 @@ def generate_crossbar_asc(
 
 if __name__ == "__main__":
     generate_crossbar_asc(
-        matrix=[[1, 2], [3, 4]],
-        voltages=[5, 6],
+        matrix=[[1, 2, 3, 4], [4, 5, 6, 7], [7, 8, 9, 10]],
+        voltages=[2, 3, 4],
         base_resistance=10_000,
         output=outputFilePath,
     )
