@@ -31,5 +31,9 @@ def _load_and_downsample(train=True, max_per_class=None):
 # We can raise this once we've confirmed sweep runtime at this size is doable
 X, y = _load_and_downsample(train=True, max_per_class=200)
 
+#for i in range(6):
+    #print(f"\nImage {i + 1} | Label: {y[i]}")
+    #print(", ".join(f"{pixel:.6f}" for pixel in X[i]))
+
 print(f"Loaded {len(X)} samples, {IMG_SIZE}x{IMG_SIZE} = {IMG_SIZE*IMG_SIZE} features, "
       f"{len(DIGITS)} classes, {[np.sum(y==i) for i in range(len(DIGITS))]} per class")
