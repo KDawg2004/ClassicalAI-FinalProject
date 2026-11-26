@@ -1,0 +1,21 @@
+LTspice 26.1.1 for Windows
+Circuit: C:\Users\Grant\Documents\code\cs441\ClassicalAI-FinalProject\spiceSims\negativesIncluded\automated\crossbar_8x64.net
+Start Time: Mon Nov 23 19:08:08 2026
+solver = Normal
+Maximum thread count: 20
+tnom = 27
+temp = 27
+method = trap
+Direct Newton iteration succeeded in finding operating point.
+Total elapsed time: 0.169 seconds.
+Total iterations: 2085
+
+Files loaded:
+C:\Users\Grant\Documents\code\cs441\ClassicalAI-FinalProject\spiceSims\negativesIncluded\automated\crossbar_8x64.net
+
+ip1: AVG(I(VSENSE1P))=14 FROM 0 TO 1e-06
+in1: AVG(I(VSENSE1N))=0 FROM 0 TO 1e-06
+ip2: AVG(I(VSENSE2P))=26 FROM 0 TO 1e-06
+in2: AVG(I(VSENSE2N))=-10 FROM 0 TO 1e-06
+ip3: AVG(I(VSENSE3P))=18 FROM 0 TO 1e-06
+in3: AVG(I(VSENSE3N))=0 FROM 0 TO 1e-06

@@ -10,14 +10,19 @@ R_base * (I(VSENSE{j}P) - I(VSENSE{j}N)).
 
 Run: python generate_differential_crossbar.py
 """
+
 from pathlib import Path
 from math import isfinite
 
 OUTPUT_DIR = Path("./LTSpiceFiles")
 
 
-def generate_differential_crossbar(matrix, voltages, base_resistance=10_000,
-                                   output=OUTPUT_DIR / "crossbar_differential.asc"):
+def generate_differential_crossbar(
+    matrix,
+    voltages,
+    base_resistance=10_000,
+    output=OUTPUT_DIR / "crossbar_differential.asc",
+):
     if not matrix or not matrix[0]:
         raise ValueError("Matrix must be nonempty")
     rows, cols = len(matrix), len(matrix[0])
@@ -37,7 +42,7 @@ def generate_differential_crossbar(matrix, voltages, base_resistance=10_000,
     # voltage:  (x,y+16), (x,y+96)
     lines = [
         "Version 4",
-        f"SHEET 1 {max(1400, 640 + cols * 400)} {max(900, 320 + max(rows, cols * 2) * 176)}",
+        f"SHEET 1 {max(1400, 640 + cols * 400)} {max(900, 600 + max(rows, cols * 2) * 176 + cols * 32)}",
         "TEXT 64 16 Left 2 ;Differential crossbar: output = positive current - negative current",
         "TEXT 64 48 Left 2 ;One row input per voltage source; two grounded sense sources per output",
         "TEXT 64 80 Left 2 ;Input voltages",
@@ -46,13 +51,15 @@ def generate_differential_crossbar(matrix, voltages, base_resistance=10_000,
 
     def part(symbol, x, y, name, value, upper, lower):
         pin_x = x + 16 if symbol == "res" else x
-        lines.extend([
-            f"SYMBOL {symbol} {x} {y} R0",
-            f"SYMATTR InstName {name}",
-            f"SYMATTR Value {value:.12g}",
-            f"FLAG {pin_x} {y + 16} {upper}",
-            f"FLAG {pin_x} {y + 96} {lower}",
-        ])
+        lines.extend(
+            [
+                f"SYMBOL {symbol} {x} {y} R0",
+                f"SYMATTR InstName {name}",
+                f"SYMATTR Value {value:.12g}",
+                f"FLAG {pin_x} {y + 16} {upper}",
+                f"FLAG {pin_x} {y + 96} {lower}",
+            ]
+        )
 
     for i, v in enumerate(voltages, start=1):
         part("voltage", 96, 144 + (i - 1) * 176, f"V{i}", v, f"row{i}", "0")
@@ -66,24 +73,50 @@ def generate_differential_crossbar(matrix, voltages, base_resistance=10_000,
             sign = "P" if weight > 0 else "N"
             x = 320 + (j - 1) * 400 + (0 if weight > 0 else 160)
             y = 144 + (i - 1) * 176
-            part("res", x, y, f"R{i}_{j}{sign}", base_resistance / abs(weight),
-                 f"row{i}", f"col{j}_{'pos' if weight > 0 else 'neg'}")
+            part(
+                "res",
+                x,
+                y,
+                f"R{i}_{j}{sign}",
+                base_resistance / abs(weight),
+                f"row{i}",
+                f"col{j}_{'pos' if weight > 0 else 'neg'}",
+            )
 
     sensors_x = 320 + cols * 400 + 56
     lines.append(f"TEXT {sensors_x} 80 Left 2 ;Output current sensors")
     for j in range(1, cols + 1):
-        part("voltage", sensors_x, 144 + (2*j-2)*176,
-             f"VSENSE{j}P", 0, f"col{j}_pos", "0")
-        part("voltage", sensors_x + 200, 144 + (2*j-2)*176,
-             f"VSENSE{j}N", 0, f"col{j}_neg", "0")
+        part(
+            "voltage",
+            sensors_x,
+            144 + (2 * j - 2) * 176,
+            f"VSENSE{j}P",
+            0,
+            f"col{j}_pos",
+            "0",
+        )
+        part(
+            "voltage",
+            sensors_x + 200,
+            144 + (2 * j - 2) * 176,
+            f"VSENSE{j}N",
+            0,
+            f"col{j}_neg",
+            "0",
+        )
 
     bottom = 320 + max(rows, cols * 2) * 176
-    lines.append(f"TEXT 64 {bottom} Left 2 !.op")
-    lines.append(f"TEXT 64 {bottom + 48} Left 2 ;With input V = vector values in volts, y = Rbase * (Ipositive - Inegative)")
-    # Use numerical SPICE measures so results are shown as signed values.
+    # Short, constant-input transient enables portable .meas log extraction.
+    lines.append(f"TEXT 64 {bottom} Left 2 !.tran 0 1u")
+    lines.append(
+        f"TEXT 64 {bottom + 48} Left 2 ;Use AVG sensor currents to reconstruct signed vector results"
+    )
     for j in range(1, cols + 1):
         lines.append(
-            f"TEXT 64 {bottom + 96 + (j-1)*32} Left 2 !.meas OP Y{j} PARAM {base_resistance:.12g}*(I(VSENSE{j}P)-I(VSENSE{j}N))"
+            f"TEXT 64 {bottom + 96 + (j-1)*64} Left 2 !.meas TRAN IP{j} AVG I(VSENSE{j}P) FROM=0 TO=1u"
+        )
+        lines.append(
+            f"TEXT 64 {bottom + 128 + (j-1)*64} Left 2 !.meas TRAN IN{j} AVG I(VSENSE{j}N) FROM=0 TO=1u"
         )
 
     out = Path(output)
@@ -91,17 +124,28 @@ def generate_differential_crossbar(matrix, voltages, base_resistance=10_000,
     out.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"Created {out.resolve()}")
     for j in range(cols):
-        pos = sum(voltages[i] * max(matrix[i][j], 0) / base_resistance for i in range(rows))
-        neg = sum(voltages[i] * max(-matrix[i][j], 0) / base_resistance for i in range(rows))
+        pos = sum(
+            voltages[i] * max(matrix[i][j], 0) / base_resistance for i in range(rows)
+        )
+        neg = sum(
+            voltages[i] * max(-matrix[i][j], 0) / base_resistance for i in range(rows)
+        )
         y = (pos - neg) * base_resistance
-        print(f"Column {j+1}: I+={pos*1000:.6g} mA, "
-              f"I-={neg*1000:.6g} mA, y={y:.10g}")
+        print(
+            f"Column {j+1}: I+={pos*1000:.6g} mA, " f"I-={neg*1000:.6g} mA, y={y:.10g}"
+        )
     return out
 
 
 if __name__ == "__main__":
+    import json
+
+    config = json.loads(
+        Path(__file__).with_name("crossbar_config.json").read_text(encoding="utf-8")
+    )
     generate_differential_crossbar(
-        matrix=[[1, -2], [-3, 4]],
-        voltages=[5, 6],
-        base_resistance=10_000,
+        matrix=config["matrix"],
+        voltages=config["voltages"],
+        base_resistance=config.get("base_resistance", 10_000),
+        output=Path(__file__).with_name("crossbar_8x64.asc"),
     )
