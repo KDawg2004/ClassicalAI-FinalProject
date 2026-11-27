@@ -1,2 +1,18 @@
 spiceSims/negativesIncluded/LTSpiceFiles
 spiceSims/positiveOnly/LTSpiceFiles
+
+__pycache__/
+*.py[cod]
+
+# MNIST dataset
+training/mnist_data/
+
+# LTspice generated files
+*.raw
+*.log
+*.net
+*.op.raw
+
+# Python environments
+.venv/
+venv/
